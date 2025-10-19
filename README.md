@@ -22,27 +22,27 @@ A production-ready reference for **time-bound, auditable privileged access** to 
 
 ---
 
-## 🗺️ Architecture (Mermaid)
+## 🗺️ Architecture 
 
 ```mermaid
 flowchart LR
-    subgraph "User & Approver"
-      RQ[Requester<br/>(asks for elevated role)]
-      AP[Approver<br/>(Ops/Sec/On‑Call)]
+    subgraph User_Approver["User & Approver"]
+      RQ["Requester\n(requests elevation)"]
+      AP["Approver\n(Ops/Sec/On-Call)"]
     end
 
-    RQ -->|Submit access request| EVB[Amazon EventBridge<br/>(AccessRequest Bus)]
-    EVB --> SFN[Step Functions<br/>(Approval State Machine)]
-    SFN -->|Notify| SNS[SNS/ChatOps<br/>(Email/Slack/Teams)]
+    RQ -->|Submit request| EVB["Amazon EventBridge\n(AccessRequest Bus)"]
+    EVB --> SFN["Step Functions\n(Approval State Machine)"]
+    SFN -->|Notify| SNS["SNS/ChatOps\n(Email/Slack/Teams)"]
     AP -->|Approve/Deny| SFN
-    SFN -->|On Approve| L1[Lambda: GrantAssignment]
-    L1 --> SSO[AWS IAM Identity Center<br/>(sso-admin API)]
-    SSO --> ACC[(Target Account)]
-    SFN -->|Schedule expiry| SCH[EventBridge Scheduler]
-    SCH --> L2[Lambda: RevokeAssignment]
+    SFN -->|On Approve| L1["Lambda: GrantAssignment"]
+    L1 --> SSO["AWS IAM Identity Center\n(sso-admin API)"]
+    SSO --> ACC["Target Account"]
+    SFN -->|Schedule expiry| SCH["EventBridge Scheduler"]
+    SCH --> L2["Lambda: RevokeAssignment"]
     L2 --> SSO
-    SFN --> CT[CloudTrail & CW Logs]
-    CT --> HUB[Security Hub]
+    SFN --> CT["CloudTrail & CW Logs"]
+    CT --> HUB["Security Hub"]
 ```
 
 ---
