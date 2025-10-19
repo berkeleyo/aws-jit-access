@@ -1,0 +1,8 @@
+{
+  "principalType": "USER",
+  "principalDisplayName": "alice@example.com",
+  "permissionSetName": "PowerUserScoped",
+  "accountName": "Sandbox-ProdLike",
+  "durationMinutes": 90,
+  "changeRef": "INC-000123"
+}

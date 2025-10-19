@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: JIT Privileged Access - Core
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+  ApprovalEmail:
+    Type: String
+    Default: secops@example.com
+  MaxDurationMinutes:
+    Type: Number
+    Default: 120
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 30
+    MemorySize: 256
+    Tracing: Active
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+
+Resources:
+  AssignmentManagerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "jit-assignment-manager-${Environment}"
+      CodeUri: ./
+      Handler: assignment_manager.lambda_handler
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sso-admin:CreateAccountAssignment
+                - sso-admin:DeleteAccountAssignment
+                - sso-admin:Describe*
+                - sso-admin:List*
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - scheduler:CreateSchedule
+                - scheduler:UpdateSchedule
+                - scheduler:DeleteSchedule
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: "*"
+      Environment:
+        Variables:
+          IDENTITY_CENTER_INSTANCE_ARN: "arn:aws:sso:::instance/EXAMPLE"
+          SCHEDULER_ROLE_ARN: "arn:aws:iam::123456789012:role/EXAMPLE" # placeholder
+          FUNCTION_ARN: !GetAtt AssignmentManagerFunction.Arn
+      Events:
+        AccessRequestEvent:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source:
+                - "jit.access"
+              detail-type:
+                - "AccessRequestApproved"
+
+Outputs:
+  FunctionArn:
+    Value: !GetAtt AssignmentManagerFunction.Arn
+    Export:
+      Name: !Sub "jit-assignment-manager-arn-${Environment}"
